@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Button, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 export default function App() {
   const [facing, setFacing] = useState('back');
+  const ref = useRef(null);
+  const [uri, setUri] = useState(null);
   const [permission, requestPermission] = useCameraPermissions();
 
   // Mientras los permisos no se han resuelto, no mostramos nada
@@ -28,15 +30,24 @@ export default function App() {
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
   }
 
+  async function tomarFoto() {
+    const photo = await ref.current?.takePictureAsync();
+    if (photo?.uri) setUri(photo.uri);
+  }
+
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing}>
+      <CameraView ref={ref} style={styles.camera} facing={facing}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
             <Text style={styles.text}>Voltear cámara</Text>
           </TouchableOpacity>
+          <Pressable style={styles.button} onPress={tomarFoto}>
+            <Text style={styles.text}>Tomar foto</Text>
+          </Pressable>
         </View>
       </CameraView>
+      {uri ? <Text style={styles.uriText}>{uri}</Text> : null}
     </View>
   );
 }
@@ -68,5 +79,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+  },
+  uriText: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#000',
+    color: '#fff',
+    fontSize: 12,
   },
 });
